@@ -1,0 +1,2338 @@
+{
+    "name": "_newCheckAvailability",
+    "flow": [
+        {
+            "id": 1,
+            "module": "gateway:CustomWebHook",
+            "version": 1,
+            "parameters": {
+                "hook": 1873334,
+                "maxResults": 1
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "restore": {
+                    "parameters": {
+                        "hook": {
+                            "data": {
+                                "editable": "true"
+                            },
+                            "label": "_newCheckAvailability"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "hook",
+                        "type": "hook:gateway-webhook",
+                        "label": "Webhook",
+                        "required": true
+                    },
+                    {
+                        "name": "maxResults",
+                        "type": "number",
+                        "label": "Maximum number of results"
+                    }
+                ],
+                "advanced": true
+            }
+        },
+        {
+            "id": 2,
+            "module": "openai-gpt-3:CreateCompletion",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 6382730
+            },
+            "mapper": {
+                "model": "chatgpt-4o-latest",
+                "top_p": "1",
+                "select": "chat",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "#Context\nWe have just asked the user when they would like to book an appointment. You will be provided with the current date and their response.\n\n#Instructions:\nYou must output the start and end times in JSON format.\n\n#Output example:\n{\"startTime\": \"2025-02-13T09:00:00.000000+05:30\",\n\"endTime\": \"2025-02-13T17:00:00.000000+05:30\"\n}\n\n\nRules:\n- The start time must be always 9am\n- The end time must be always 5pm\n- The start and end time must be the same date.\n- The output should not include any explanations\n- The output should always start with a curly bracket.\t"
+                    },
+                    {
+                        "role": "user",
+                        "content": "-This is the current date/time: {{now}}\n-This is when the user would like to book: {{1.message.toolCalls[].function.arguments.`_dateAndTime`}}",
+                        "imageDetail": "auto"
+                    }
+                ],
+                "max_tokens": "300",
+                "temperature": "1",
+                "n_completions": "1",
+                "response_format": "json_object",
+                "parseJSONResponse": true
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "stop": {
+                            "mode": "chose"
+                        },
+                        "model": {
+                            "mode": "chose",
+                            "label": "chatgpt-4o-latest (system)"
+                        },
+                        "select": {
+                            "label": "Create a Chat Completion (GPT and o1 models)"
+                        },
+                        "messages": {
+                            "mode": "chose",
+                            "items": [
+                                {
+                                    "role": {
+                                        "mode": "chose",
+                                        "label": "Developer / System"
+                                    }
+                                },
+                                {
+                                    "role": {
+                                        "mode": "chose",
+                                        "label": "User"
+                                    },
+                                    "imageDetail": {
+                                        "mode": "chose",
+                                        "label": "Auto"
+                                    },
+                                    "imageInputType": {
+                                        "mode": "chose",
+                                        "label": "Empty"
+                                    }
+                                }
+                            ]
+                        },
+                        "logit_bias": {
+                            "mode": "chose"
+                        },
+                        "response_format": {
+                            "mode": "chose",
+                            "label": "JSON Object"
+                        },
+                        "parseJSONResponse": {
+                            "mode": "chose"
+                        },
+                        "additionalParameters": {
+                            "mode": "chose"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "openai-gpt-3"
+                            },
+                            "label": "gathering current date and time"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:openai-gpt-3",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "select",
+                        "type": "select",
+                        "label": "Select Method",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "chat",
+                                "prompt"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "temperature",
+                        "type": "number",
+                        "label": "Temperature",
+                        "validate": {
+                            "max": 2,
+                            "min": 0
+                        }
+                    },
+                    {
+                        "name": "top_p",
+                        "type": "number",
+                        "label": "Top P",
+                        "validate": {
+                            "max": 1,
+                            "min": 0
+                        }
+                    },
+                    {
+                        "name": "n_completions",
+                        "type": "number",
+                        "label": "Number"
+                    },
+                    {
+                        "name": "frequency_penalty",
+                        "type": "number",
+                        "label": "Frequency Penalty",
+                        "validate": {
+                            "max": 2,
+                            "min": -2
+                        }
+                    },
+                    {
+                        "name": "presence_penalty",
+                        "type": "number",
+                        "label": "Presence Penalty",
+                        "validate": {
+                            "max": 2,
+                            "min": -2
+                        }
+                    },
+                    {
+                        "name": "logit_bias",
+                        "spec": {
+                            "name": "value",
+                            "spec": [
+                                {
+                                    "name": "token",
+                                    "type": "text",
+                                    "label": "Token ID",
+                                    "required": true
+                                },
+                                {
+                                    "name": "probability",
+                                    "type": "number",
+                                    "label": "Probability",
+                                    "required": true,
+                                    "validate": {
+                                        "max": 100,
+                                        "min": -100
+                                    }
+                                }
+                            ],
+                            "type": "collection",
+                            "label": "Token Probability"
+                        },
+                        "type": "array",
+                        "label": "Token Probability"
+                    },
+                    {
+                        "name": "seed",
+                        "type": "integer",
+                        "label": "Seed"
+                    },
+                    {
+                        "name": "stop",
+                        "spec": {
+                            "name": "value",
+                            "type": "text",
+                            "label": "Stop Sequence"
+                        },
+                        "type": "array",
+                        "label": "Stop Sequences",
+                        "validate": {
+                            "maxItems": 4
+                        }
+                    },
+                    {
+                        "name": "additionalParameters",
+                        "spec": {
+                            "name": "value",
+                            "spec": [
+                                {
+                                    "name": "key",
+                                    "type": "text",
+                                    "label": "Parameter Name",
+                                    "required": true
+                                },
+                                {
+                                    "name": "type",
+                                    "type": "select",
+                                    "label": "Input Type",
+                                    "options": [
+                                        {
+                                            "label": "Text",
+                                            "value": "text",
+                                            "nested": [
+                                                {
+                                                    "name": "value",
+                                                    "type": "text",
+                                                    "label": "Parameter Value"
+                                                }
+                                            ],
+                                            "default": true
+                                        },
+                                        {
+                                            "label": "Number",
+                                            "value": "number",
+                                            "nested": [
+                                                {
+                                                    "name": "value",
+                                                    "type": "number",
+                                                    "label": "Parameter Value"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "label": "Boolean",
+                                            "value": "boolean",
+                                            "nested": [
+                                                {
+                                                    "name": "value",
+                                                    "type": "boolean",
+                                                    "label": "Parameter Value"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "label": "Date",
+                                            "value": "date",
+                                            "nested": [
+                                                {
+                                                    "name": "value",
+                                                    "type": "date",
+                                                    "label": "Parameter Value"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "label": "Any",
+                                            "value": "any",
+                                            "nested": [
+                                                {
+                                                    "name": "value",
+                                                    "type": "any",
+                                                    "label": "Parameter Value"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "type": "collection",
+                            "label": "Input Parameter"
+                        },
+                        "type": "array",
+                        "label": "Other Input Parameters"
+                    },
+                    {
+                        "name": "model",
+                        "type": "select",
+                        "label": "Model",
+                        "required": true
+                    },
+                    {
+                        "name": "max_tokens",
+                        "type": "uinteger",
+                        "label": "Max Completion Tokens"
+                    },
+                    {
+                        "name": "messages",
+                        "spec": {
+                            "name": "value",
+                            "spec": [
+                                {
+                                    "name": "role",
+                                    "type": "select",
+                                    "label": "Role",
+                                    "options": {
+                                        "store": [
+                                            {
+                                                "label": "User",
+                                                "value": "user",
+                                                "nested": [
+                                                    {
+                                                        "help": "Text content of the message on behalf of the selected __Role__.",
+                                                        "name": "content",
+                                                        "type": "text",
+                                                        "label": "Text Content"
+                                                    },
+                                                    {
+                                                        "name": "imageInputType",
+                                                        "type": "select",
+                                                        "label": "Image Input Type",
+                                                        "options": [
+                                                            {
+                                                                "label": "URL",
+                                                                "value": "url",
+                                                                "nested": [
+                                                                    {
+                                                                        "help": "Make sure to use a publicly accessible URL.\nYou can test if your image is publicly accessible by opening the link in an incognito tab.",
+                                                                        "name": "imageUrl",
+                                                                        "type": "url",
+                                                                        "label": "Image URL"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "label": "Image File",
+                                                                "value": "file",
+                                                                "nested": [
+                                                                    {
+                                                                        "name": "imageFile",
+                                                                        "spec": [
+                                                                            {
+                                                                                "help": "Accepted extensions: `.jpg`, `.jpeg`, `.png`, `.webp` and `.gif`.",
+                                                                                "name": "imageFilename",
+                                                                                "type": "filename",
+                                                                                "label": "Image Filename",
+                                                                                "semantic": "file:name",
+                                                                                "extension": [
+                                                                                    "jpg",
+                                                                                    "jpeg",
+                                                                                    "png",
+                                                                                    "webp",
+                                                                                    "gif"
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "name": "imageData",
+                                                                                "type": "buffer",
+                                                                                "label": "Image Data",
+                                                                                "semantic": "file:data"
+                                                                            }
+                                                                        ],
+                                                                        "type": "collection",
+                                                                        "label": "Image"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ],
+                                                        "mappable": false
+                                                    },
+                                                    {
+                                                        "help": "Recommended value: `Auto`",
+                                                        "name": "imageDetail",
+                                                        "type": "select",
+                                                        "label": "Image Detail",
+                                                        "options": [
+                                                            {
+                                                                "label": "Auto",
+                                                                "value": "auto",
+                                                                "default": true
+                                                            },
+                                                            {
+                                                                "label": "High",
+                                                                "value": "high"
+                                                            },
+                                                            {
+                                                                "label": "Low",
+                                                                "value": "low"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "label": "Assistant",
+                                                "value": "assistant",
+                                                "nested": [
+                                                    {
+                                                        "help": "Text content of the message on behalf of the selected __Role__.",
+                                                        "name": "content",
+                                                        "type": "text",
+                                                        "label": "Text Content"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "label": "Developer / System",
+                                                "value": "system",
+                                                "nested": [
+                                                    {
+                                                        "help": "Text content of the message on behalf of the selected __Role__.",
+                                                        "name": "content",
+                                                        "type": "text",
+                                                        "label": "Text Content"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "required": true
+                                }
+                            ],
+                            "type": "collection",
+                            "label": "Message"
+                        },
+                        "type": "array",
+                        "label": "Messages",
+                        "required": true
+                    },
+                    {
+                        "name": "response_format",
+                        "type": "select",
+                        "label": "Response Format",
+                        "validate": {
+                            "enum": [
+                                "text",
+                                "json_object"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "prediction",
+                        "type": "text",
+                        "label": "Predicted Outputs"
+                    },
+                    {
+                        "name": "parseJSONResponse",
+                        "type": "boolean",
+                        "label": "Parse JSON Response",
+                        "required": true
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "result",
+                        "type": "any",
+                        "label": "Result"
+                    },
+                    {
+                        "name": "id",
+                        "type": "text",
+                        "label": "ID"
+                    },
+                    {
+                        "name": "object",
+                        "type": "text",
+                        "label": "Object"
+                    },
+                    {
+                        "name": "created",
+                        "type": "date",
+                        "label": "Created"
+                    },
+                    {
+                        "name": "model",
+                        "type": "text",
+                        "label": "Model"
+                    },
+                    {
+                        "name": "choices",
+                        "spec": {
+                            "spec": [
+                                {
+                                    "name": "text",
+                                    "type": "text",
+                                    "label": "Text"
+                                },
+                                {
+                                    "name": "index",
+                                    "type": "number",
+                                    "label": "Index"
+                                },
+                                {
+                                    "name": "logprobs",
+                                    "type": "text",
+                                    "label": "Log Probs"
+                                },
+                                {
+                                    "name": "finish_reason",
+                                    "type": "text",
+                                    "label": "Finish Reason"
+                                },
+                                {
+                                    "name": "message",
+                                    "spec": [
+                                        {
+                                            "name": "role",
+                                            "type": "text",
+                                            "label": "Role"
+                                        },
+                                        {
+                                            "name": "content",
+                                            "type": "text",
+                                            "label": "Content"
+                                        },
+                                        {
+                                            "name": "refusal",
+                                            "type": "text",
+                                            "label": "Refusal"
+                                        }
+                                    ],
+                                    "type": "collection",
+                                    "label": "Message"
+                                }
+                            ],
+                            "type": "collection"
+                        },
+                        "type": "array",
+                        "label": "Choices"
+                    },
+                    {
+                        "name": "usage",
+                        "spec": [
+                            {
+                                "name": "prompt_tokens",
+                                "type": "number",
+                                "label": "Prompt Tokens"
+                            },
+                            {
+                                "name": "completion_tokens",
+                                "type": "text",
+                                "label": "Completion Tokens"
+                            },
+                            {
+                                "name": "total_tokens",
+                                "type": "number",
+                                "label": "Total Tokens"
+                            },
+                            {
+                                "name": "prompt_tokens_details",
+                                "spec": [
+                                    {
+                                        "name": "cached_tokens",
+                                        "type": "uinteger",
+                                        "label": "Cached Tokens"
+                                    },
+                                    {
+                                        "name": "text_tokens",
+                                        "type": "uinteger",
+                                        "label": "Text Tokens"
+                                    },
+                                    {
+                                        "name": "image_tokens",
+                                        "type": "uinteger",
+                                        "label": "Image Tokens"
+                                    },
+                                    {
+                                        "name": "audio_tokens",
+                                        "type": "uinteger",
+                                        "label": "Audio Tokens"
+                                    }
+                                ],
+                                "type": "collection",
+                                "label": "Prompt Tokens Details"
+                            },
+                            {
+                                "name": "completion_tokens_details",
+                                "spec": [
+                                    {
+                                        "name": "reasoning_tokens",
+                                        "type": "uinteger",
+                                        "label": "Reasoning Tokens"
+                                    },
+                                    {
+                                        "name": "text_tokens",
+                                        "type": "uinteger",
+                                        "label": "Text Tokens"
+                                    },
+                                    {
+                                        "name": "audio_tokens",
+                                        "type": "uinteger",
+                                        "label": "Audio Tokens"
+                                    },
+                                    {
+                                        "name": "accepted_prediction_tokens",
+                                        "type": "uinteger",
+                                        "label": "Accepted Prediction Tokens"
+                                    },
+                                    {
+                                        "name": "rejected_prediction_tokens",
+                                        "type": "uinteger",
+                                        "label": "Rejected Prediction Tokens"
+                                    }
+                                ],
+                                "type": "collection",
+                                "label": "Completion Tokens Details"
+                            }
+                        ],
+                        "type": "collection",
+                        "label": "Usage"
+                    },
+                    {
+                        "name": "service_tier",
+                        "type": "text",
+                        "label": "Service Tier"
+                    },
+                    {
+                        "name": "system_fingerprint",
+                        "type": "text",
+                        "label": "System Fingerprint"
+                    }
+                ],
+                "advanced": true
+            }
+        },
+        {
+            "id": 14,
+            "module": "json:ParseJSON",
+            "version": 1,
+            "parameters": {
+                "type": 231718
+            },
+            "mapper": {
+                "json": "{{2.choices[].message.content}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 600,
+                    "y": 0
+                },
+                "restore": {
+                    "parameters": {
+                        "type": {
+                            "label": "_newCheckAvailability-DS1"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "type",
+                        "type": "udt",
+                        "label": "Data structure"
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "json",
+                        "type": "text",
+                        "label": "JSON string",
+                        "required": true
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "startTime",
+                        "type": "text",
+                        "label": null,
+                        "default": null,
+                        "required": false,
+                        "multiline": false
+                    },
+                    {
+                        "name": "endTime",
+                        "type": "text",
+                        "label": null,
+                        "default": null,
+                        "required": false,
+                        "multiline": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": 15,
+            "module": "util:SetVariable2",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "name": "dayOfWeek",
+                "scope": "roundtrip",
+                "value": "{{formatDate(1.message.toolCalls[].function.arguments.`_dateAndTime`; \"dd\")}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 900,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "scope": {
+                            "label": "One cycle"
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "name",
+                        "type": "text",
+                        "label": "Variable name",
+                        "required": true
+                    },
+                    {
+                        "name": "scope",
+                        "type": "select",
+                        "label": "Variable lifetime",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "roundtrip",
+                                "execution"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "value",
+                        "type": "any",
+                        "label": "Variable value"
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "dayOfWeek",
+                        "type": "any",
+                        "label": "dayOfWeek"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 16,
+            "module": "builtin:BasicRouter",
+            "version": 1,
+            "parameters": {
+                "else": 0
+            },
+            "mapper": null,
+            "metadata": {
+                "designer": {
+                    "x": 1200,
+                    "y": 0
+                }
+            },
+            "routes": [
+                {
+                    "flow": [
+                        {
+                            "id": 17,
+                            "module": "gateway:WebhookRespond",
+                            "version": 1,
+                            "parameters": {},
+                            "filter": {
+                                "name": "onSundays",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{15.dayOfWeek}}",
+                                            "b": "su",
+                                            "o": "text:equal:ci"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "body": "{\n    \"results\": [\n        {\n            \"toolCallId\": \"{{1.message.toolCalls[].id}}\",\n            \"result\": \"Sorry,we are closed on sunday\"\n        }\n    ]\n}",
+                                "status": "200",
+                                "headers": []
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 1500,
+                                    "y": -150
+                                },
+                                "restore": {
+                                    "expect": {
+                                        "headers": {
+                                            "mode": "chose"
+                                        }
+                                    }
+                                },
+                                "expect": [
+                                    {
+                                        "name": "status",
+                                        "type": "uinteger",
+                                        "label": "Status",
+                                        "required": true,
+                                        "validate": {
+                                            "min": 100
+                                        }
+                                    },
+                                    {
+                                        "name": "body",
+                                        "type": "any",
+                                        "label": "Body"
+                                    },
+                                    {
+                                        "name": "headers",
+                                        "spec": [
+                                            {
+                                                "name": "key",
+                                                "type": "text",
+                                                "label": "Key",
+                                                "required": true,
+                                                "validate": {
+                                                    "max": 256
+                                                }
+                                            },
+                                            {
+                                                "name": "value",
+                                                "type": "text",
+                                                "label": "Value",
+                                                "required": true,
+                                                "validate": {
+                                                    "max": 4096
+                                                }
+                                            }
+                                        ],
+                                        "type": "array",
+                                        "label": "Custom headers",
+                                        "validate": {
+                                            "maxItems": 16
+                                        }
+                                    }
+                                ],
+                                "advanced": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "flow": [
+                        {
+                            "id": 20,
+                            "module": "google-calendar:getFreeBusyInformation",
+                            "version": 5,
+                            "parameters": {
+                                "__IMTCONN__": 6558203
+                            },
+                            "mapper": {
+                                "item": [
+                                    {
+                                        "id": "harir2389@gmail.com"
+                                    }
+                                ],
+                                "timeMax": "{{14.endTime}}",
+                                "timeMin": "{{14.startTime}}"
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 1500,
+                                    "y": 150
+                                },
+                                "restore": {
+                                    "expect": {
+                                        "item": {
+                                            "mode": "chose",
+                                            "items": [
+                                                {
+                                                    "id": {
+                                                        "mode": "edit"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "parameters": {
+                                        "__IMTCONN__": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "google"
+                                            },
+                                            "label": "My Google connection"
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:google",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ],
+                                "expect": [
+                                    {
+                                        "name": "timeMin",
+                                        "time": true,
+                                        "type": "date",
+                                        "label": "Minimum Time",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "timeMax",
+                                        "time": true,
+                                        "type": "date",
+                                        "label": "Maximum Time",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "item",
+                                        "spec": [
+                                            {
+                                                "mode": "edit",
+                                                "name": "id",
+                                                "type": "select",
+                                                "label": "Calendar ID",
+                                                "dynamic": true,
+                                                "options": [],
+                                                "required": true
+                                            }
+                                        ],
+                                        "type": "array",
+                                        "label": "Calendars",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "timeMin",
+                                        "time": true,
+                                        "type": "date",
+                                        "label": "Minimum Time",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "timeMax",
+                                        "time": true,
+                                        "type": "date",
+                                        "label": "Maximum Time",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "item",
+                                        "spec": [
+                                            {
+                                                "mode": "edit",
+                                                "name": "id",
+                                                "type": "select",
+                                                "label": "Calendar ID",
+                                                "dynamic": true,
+                                                "options": [],
+                                                "required": true
+                                            }
+                                        ],
+                                        "type": "array",
+                                        "label": "Calendars",
+                                        "required": true
+                                    }
+                                ],
+                                "interface": [
+                                    {
+                                        "name": "kind",
+                                        "type": "text",
+                                        "label": "Kind"
+                                    },
+                                    {
+                                        "name": "timeMin",
+                                        "type": "date",
+                                        "label": "Time Min"
+                                    },
+                                    {
+                                        "name": "timeMax",
+                                        "type": "date",
+                                        "label": "Time Max"
+                                    },
+                                    {
+                                        "name": "calendars",
+                                        "spec": [
+                                            {
+                                                "name": "harir2389@gmail.com",
+                                                "spec": [
+                                                    {
+                                                        "name": "busy",
+                                                        "spec": [
+                                                            {
+                                                                "name": "start",
+                                                                "type": "date",
+                                                                "label": "Start"
+                                                            },
+                                                            {
+                                                                "name": "end",
+                                                                "type": "date",
+                                                                "label": "End"
+                                                            }
+                                                        ],
+                                                        "type": "array",
+                                                        "label": "Busy"
+                                                    },
+                                                    {
+                                                        "name": "errors",
+                                                        "spec": [
+                                                            {
+                                                                "name": "domain",
+                                                                "type": "date",
+                                                                "label": "Domain"
+                                                            },
+                                                            {
+                                                                "name": "reason",
+                                                                "type": "date",
+                                                                "label": "Reason"
+                                                            }
+                                                        ],
+                                                        "type": "array",
+                                                        "label": "Errors"
+                                                    }
+                                                ],
+                                                "type": "collection",
+                                                "label": "harir2389@gmail.com"
+                                            }
+                                        ],
+                                        "type": "collection",
+                                        "label": "Calendars"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 21,
+                            "module": "builtin:BasicRouter",
+                            "version": 1,
+                            "mapper": null,
+                            "metadata": {
+                                "designer": {
+                                    "x": 1800,
+                                    "y": 150
+                                }
+                            },
+                            "routes": [
+                                {
+                                    "flow": [
+                                        {
+                                            "id": 22,
+                                            "module": "gateway:WebhookRespond",
+                                            "version": 1,
+                                            "parameters": {},
+                                            "filter": {
+                                                "name": "_noBusySlots",
+                                                "conditions": [
+                                                    [
+                                                        {
+                                                            "a": "{{20.calendars.`harir2389@gmail.com`}}",
+                                                            "b": "0",
+                                                            "o": "array:equal"
+                                                        }
+                                                    ]
+                                                ]
+                                            },
+                                            "mapper": {
+                                                "body": "{\n    \"results\": [\n        {\n            \"toolCallId\": \"{{1.message.toolCalls[].id}}\",\n            \"result\": \"these are the slots available\n{{1.message.toolCalls[].function.arguments.`_dateAndTime`}}\"\n        }\n    ]\n}",
+                                                "status": "200",
+                                                "headers": []
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 2100,
+                                                    "y": 0
+                                                },
+                                                "restore": {
+                                                    "expect": {
+                                                        "headers": {
+                                                            "mode": "chose"
+                                                        }
+                                                    }
+                                                },
+                                                "expect": [
+                                                    {
+                                                        "name": "status",
+                                                        "type": "uinteger",
+                                                        "label": "Status",
+                                                        "required": true,
+                                                        "validate": {
+                                                            "min": 100
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "body",
+                                                        "type": "any",
+                                                        "label": "Body"
+                                                    },
+                                                    {
+                                                        "name": "headers",
+                                                        "spec": [
+                                                            {
+                                                                "name": "key",
+                                                                "type": "text",
+                                                                "label": "Key",
+                                                                "required": true,
+                                                                "validate": {
+                                                                    "max": 256
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": "value",
+                                                                "type": "text",
+                                                                "label": "Value",
+                                                                "required": true,
+                                                                "validate": {
+                                                                    "max": 4096
+                                                                }
+                                                            }
+                                                        ],
+                                                        "type": "array",
+                                                        "label": "Custom headers",
+                                                        "validate": {
+                                                            "maxItems": 16
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "flow": [
+                                        {
+                                            "id": 23,
+                                            "module": "builtin:BasicFeeder",
+                                            "version": 1,
+                                            "parameters": {},
+                                            "filter": {
+                                                "name": "_hasBusySlots",
+                                                "conditions": [
+                                                    [
+                                                        {
+                                                            "a": "{{20.calendars.`harir2389@gmail.com`.busy}}",
+                                                            "b": "0",
+                                                            "o": "array:greater"
+                                                        }
+                                                    ]
+                                                ]
+                                            },
+                                            "mapper": {
+                                                "array": "{{20.calendars.`harir2389@gmail.com`.busy}}"
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 2100,
+                                                    "y": 300
+                                                },
+                                                "restore": {
+                                                    "expect": {
+                                                        "array": {
+                                                            "mode": "edit"
+                                                        }
+                                                    }
+                                                },
+                                                "expect": [
+                                                    {
+                                                        "mode": "edit",
+                                                        "name": "array",
+                                                        "spec": [],
+                                                        "type": "array",
+                                                        "label": "Array"
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": 25,
+                                            "module": "json:CreateJSON",
+                                            "version": 1,
+                                            "parameters": {
+                                                "type": 233921,
+                                                "space": ""
+                                            },
+                                            "mapper": {
+                                                "value": {
+                                                    "end": "{{23.end}}",
+                                                    "start": "{{23.start}}"
+                                                },
+                                                "endTime": "",
+                                                "startTime": ""
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 2400,
+                                                    "y": 300
+                                                },
+                                                "restore": {
+                                                    "parameters": {
+                                                        "type": {
+                                                            "label": "_newCheckAvailability-DS2"
+                                                        },
+                                                        "space": {
+                                                            "label": "Empty"
+                                                        }
+                                                    }
+                                                },
+                                                "parameters": [
+                                                    {
+                                                        "name": "type",
+                                                        "type": "udt",
+                                                        "label": "Data structure",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "name": "space",
+                                                        "type": "select",
+                                                        "label": "Indentation",
+                                                        "validate": {
+                                                            "enum": [
+                                                                "tab",
+                                                                "2",
+                                                                "4"
+                                                            ]
+                                                        }
+                                                    }
+                                                ],
+                                                "expect": [
+                                                    {
+                                                        "name": "startTime",
+                                                        "type": "text",
+                                                        "label": null
+                                                    },
+                                                    {
+                                                        "name": "endTime",
+                                                        "type": "text",
+                                                        "label": null
+                                                    },
+                                                    {
+                                                        "name": "value",
+                                                        "spec": [
+                                                            {
+                                                                "name": "start",
+                                                                "type": "text",
+                                                                "label": null
+                                                            },
+                                                            {
+                                                                "name": "end",
+                                                                "type": "text",
+                                                                "label": null
+                                                            }
+                                                        ],
+                                                        "type": "collection",
+                                                        "label": null
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": 26,
+                                            "module": "openai-gpt-3:CreateCompletion",
+                                            "version": 1,
+                                            "parameters": {
+                                                "__IMTCONN__": 6580274
+                                            },
+                                            "mapper": {
+                                                "model": "gpt-4o",
+                                                "top_p": "1",
+                                                "select": "chat",
+                                                "messages": [
+                                                    {
+                                                        "role": "system",
+                                                        "content": "You are an expert at finding\nopen slots in a busy calendar. You will be provided with busy slots from the\ncalendar. busy slots from the calendar which will be given in Zulu time\nunderstand that the time zone I need listed will be in +05:30 timezone. Your\ntask is to list the available times between 9am and 5pm, after extracting the\nbusy slots. Just output the available times and the date\n\nRules: \n- if it is the whole hour,for example 9am. Do not say 9:00am.\n\nFor example, you should only output: \n\nThese are the available times for that day: 9am - 2pm and 3pm - 4pm."
+                                                    },
+                                                    {
+                                                        "role": "user",
+                                                        "content": "\n\nEach \"start\" and\n\"end\" pair represents one busy slot \n\n \n\nThese are the busy slots from\ncalendar : {{25.json}}\n\nfor example if your given these busy slots:\n\n{\"value\":{\"end\":\"2025-02-07T23:00:00.000Z\",\"start\":\"2025-02-07T22:00:00.000Z\"}}\n\nand\n\n{\"value\":{\"end\":\"2025-02-08T01:00:00.000Z\",\"start\":\"2025-02-08T00:00:00.000Z\"}}\n\nMeaning slots for 2pm - 3pm\nand 4pm - 5pm are booked.",
+                                                        "imageDetail": "auto"
+                                                    }
+                                                ],
+                                                "max_tokens": "300",
+                                                "temperature": "1",
+                                                "n_completions": "1",
+                                                "response_format": "text"
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 2700,
+                                                    "y": 300
+                                                },
+                                                "restore": {
+                                                    "expect": {
+                                                        "stop": {
+                                                            "mode": "chose"
+                                                        },
+                                                        "model": {
+                                                            "mode": "chose",
+                                                            "label": "gpt-4o (system)"
+                                                        },
+                                                        "select": {
+                                                            "label": "Create a Chat Completion (GPT and o1 models)"
+                                                        },
+                                                        "messages": {
+                                                            "mode": "chose",
+                                                            "items": [
+                                                                {
+                                                                    "role": {
+                                                                        "mode": "chose",
+                                                                        "label": "Developer / System"
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "role": {
+                                                                        "mode": "chose",
+                                                                        "label": "User"
+                                                                    },
+                                                                    "imageDetail": {
+                                                                        "mode": "chose",
+                                                                        "label": "Auto"
+                                                                    },
+                                                                    "imageInputType": {
+                                                                        "mode": "chose",
+                                                                        "label": "Empty"
+                                                                    }
+                                                                }
+                                                            ]
+                                                        },
+                                                        "logit_bias": {
+                                                            "mode": "chose"
+                                                        },
+                                                        "response_format": {
+                                                            "mode": "chose",
+                                                            "label": "Text"
+                                                        },
+                                                        "additionalParameters": {
+                                                            "mode": "chose"
+                                                        }
+                                                    },
+                                                    "parameters": {
+                                                        "__IMTCONN__": {
+                                                            "data": {
+                                                                "scoped": "true",
+                                                                "connection": "openai-gpt-3"
+                                                            },
+                                                            "label": "My OpenAI connection"
+                                                        }
+                                                    }
+                                                },
+                                                "parameters": [
+                                                    {
+                                                        "name": "__IMTCONN__",
+                                                        "type": "account:openai-gpt-3",
+                                                        "label": "Connection",
+                                                        "required": true
+                                                    }
+                                                ],
+                                                "expect": [
+                                                    {
+                                                        "name": "select",
+                                                        "type": "select",
+                                                        "label": "Select Method",
+                                                        "required": true,
+                                                        "validate": {
+                                                            "enum": [
+                                                                "chat",
+                                                                "prompt"
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "temperature",
+                                                        "type": "number",
+                                                        "label": "Temperature",
+                                                        "validate": {
+                                                            "max": 2,
+                                                            "min": 0
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "top_p",
+                                                        "type": "number",
+                                                        "label": "Top P",
+                                                        "validate": {
+                                                            "max": 1,
+                                                            "min": 0
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "n_completions",
+                                                        "type": "number",
+                                                        "label": "Number"
+                                                    },
+                                                    {
+                                                        "name": "frequency_penalty",
+                                                        "type": "number",
+                                                        "label": "Frequency Penalty",
+                                                        "validate": {
+                                                            "max": 2,
+                                                            "min": -2
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "presence_penalty",
+                                                        "type": "number",
+                                                        "label": "Presence Penalty",
+                                                        "validate": {
+                                                            "max": 2,
+                                                            "min": -2
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "logit_bias",
+                                                        "spec": {
+                                                            "name": "value",
+                                                            "spec": [
+                                                                {
+                                                                    "name": "token",
+                                                                    "type": "text",
+                                                                    "label": "Token ID",
+                                                                    "required": true
+                                                                },
+                                                                {
+                                                                    "name": "probability",
+                                                                    "type": "number",
+                                                                    "label": "Probability",
+                                                                    "required": true,
+                                                                    "validate": {
+                                                                        "max": 100,
+                                                                        "min": -100
+                                                                    }
+                                                                }
+                                                            ],
+                                                            "type": "collection",
+                                                            "label": "Token Probability"
+                                                        },
+                                                        "type": "array",
+                                                        "label": "Token Probability"
+                                                    },
+                                                    {
+                                                        "name": "seed",
+                                                        "type": "integer",
+                                                        "label": "Seed"
+                                                    },
+                                                    {
+                                                        "name": "stop",
+                                                        "spec": {
+                                                            "name": "value",
+                                                            "type": "text",
+                                                            "label": "Stop Sequence"
+                                                        },
+                                                        "type": "array",
+                                                        "label": "Stop Sequences",
+                                                        "validate": {
+                                                            "maxItems": 4
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "additionalParameters",
+                                                        "spec": {
+                                                            "name": "value",
+                                                            "spec": [
+                                                                {
+                                                                    "name": "key",
+                                                                    "type": "text",
+                                                                    "label": "Parameter Name",
+                                                                    "required": true
+                                                                },
+                                                                {
+                                                                    "name": "type",
+                                                                    "type": "select",
+                                                                    "label": "Input Type",
+                                                                    "options": [
+                                                                        {
+                                                                            "label": "Text",
+                                                                            "value": "text",
+                                                                            "nested": [
+                                                                                {
+                                                                                    "name": "value",
+                                                                                    "type": "text",
+                                                                                    "label": "Parameter Value"
+                                                                                }
+                                                                            ],
+                                                                            "default": true
+                                                                        },
+                                                                        {
+                                                                            "label": "Number",
+                                                                            "value": "number",
+                                                                            "nested": [
+                                                                                {
+                                                                                    "name": "value",
+                                                                                    "type": "number",
+                                                                                    "label": "Parameter Value"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "label": "Boolean",
+                                                                            "value": "boolean",
+                                                                            "nested": [
+                                                                                {
+                                                                                    "name": "value",
+                                                                                    "type": "boolean",
+                                                                                    "label": "Parameter Value"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "label": "Date",
+                                                                            "value": "date",
+                                                                            "nested": [
+                                                                                {
+                                                                                    "name": "value",
+                                                                                    "type": "date",
+                                                                                    "label": "Parameter Value"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "label": "Any",
+                                                                            "value": "any",
+                                                                            "nested": [
+                                                                                {
+                                                                                    "name": "value",
+                                                                                    "type": "any",
+                                                                                    "label": "Parameter Value"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ],
+                                                            "type": "collection",
+                                                            "label": "Input Parameter"
+                                                        },
+                                                        "type": "array",
+                                                        "label": "Other Input Parameters"
+                                                    },
+                                                    {
+                                                        "name": "model",
+                                                        "type": "select",
+                                                        "label": "Model",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "name": "max_tokens",
+                                                        "type": "uinteger",
+                                                        "label": "Max Completion Tokens"
+                                                    },
+                                                    {
+                                                        "name": "messages",
+                                                        "spec": {
+                                                            "name": "value",
+                                                            "spec": [
+                                                                {
+                                                                    "name": "role",
+                                                                    "type": "select",
+                                                                    "label": "Role",
+                                                                    "options": {
+                                                                        "store": [
+                                                                            {
+                                                                                "label": "User",
+                                                                                "value": "user",
+                                                                                "nested": [
+                                                                                    {
+                                                                                        "help": "Text content of the message on behalf of the selected __Role__.",
+                                                                                        "name": "content",
+                                                                                        "type": "text",
+                                                                                        "label": "Text Content"
+                                                                                    },
+                                                                                    {
+                                                                                        "name": "imageInputType",
+                                                                                        "type": "select",
+                                                                                        "label": "Image Input Type",
+                                                                                        "options": [
+                                                                                            {
+                                                                                                "label": "URL",
+                                                                                                "value": "url",
+                                                                                                "nested": [
+                                                                                                    {
+                                                                                                        "help": "Make sure to use a publicly accessible URL.\nYou can test if your image is publicly accessible by opening the link in an incognito tab.",
+                                                                                                        "name": "imageUrl",
+                                                                                                        "type": "url",
+                                                                                                        "label": "Image URL"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "label": "Image File",
+                                                                                                "value": "file",
+                                                                                                "nested": [
+                                                                                                    {
+                                                                                                        "name": "imageFile",
+                                                                                                        "spec": [
+                                                                                                            {
+                                                                                                                "help": "Accepted extensions: `.jpg`, `.jpeg`, `.png`, `.webp` and `.gif`.",
+                                                                                                                "name": "imageFilename",
+                                                                                                                "type": "filename",
+                                                                                                                "label": "Image Filename",
+                                                                                                                "semantic": "file:name",
+                                                                                                                "extension": [
+                                                                                                                    "jpg",
+                                                                                                                    "jpeg",
+                                                                                                                    "png",
+                                                                                                                    "webp",
+                                                                                                                    "gif"
+                                                                                                                ]
+                                                                                                            },
+                                                                                                            {
+                                                                                                                "name": "imageData",
+                                                                                                                "type": "buffer",
+                                                                                                                "label": "Image Data",
+                                                                                                                "semantic": "file:data"
+                                                                                                            }
+                                                                                                        ],
+                                                                                                        "type": "collection",
+                                                                                                        "label": "Image"
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        ],
+                                                                                        "mappable": false
+                                                                                    },
+                                                                                    {
+                                                                                        "help": "Recommended value: `Auto`",
+                                                                                        "name": "imageDetail",
+                                                                                        "type": "select",
+                                                                                        "label": "Image Detail",
+                                                                                        "options": [
+                                                                                            {
+                                                                                                "label": "Auto",
+                                                                                                "value": "auto",
+                                                                                                "default": true
+                                                                                            },
+                                                                                            {
+                                                                                                "label": "High",
+                                                                                                "value": "high"
+                                                                                            },
+                                                                                            {
+                                                                                                "label": "Low",
+                                                                                                "value": "low"
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "label": "Assistant",
+                                                                                "value": "assistant",
+                                                                                "nested": [
+                                                                                    {
+                                                                                        "help": "Text content of the message on behalf of the selected __Role__.",
+                                                                                        "name": "content",
+                                                                                        "type": "text",
+                                                                                        "label": "Text Content"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "label": "Developer / System",
+                                                                                "value": "system",
+                                                                                "nested": [
+                                                                                    {
+                                                                                        "help": "Text content of the message on behalf of the selected __Role__.",
+                                                                                        "name": "content",
+                                                                                        "type": "text",
+                                                                                        "label": "Text Content"
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "required": true
+                                                                }
+                                                            ],
+                                                            "type": "collection",
+                                                            "label": "Message"
+                                                        },
+                                                        "type": "array",
+                                                        "label": "Messages",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "name": "response_format",
+                                                        "type": "select",
+                                                        "label": "Response Format",
+                                                        "validate": {
+                                                            "enum": [
+                                                                "text",
+                                                                "json_object"
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "prediction",
+                                                        "type": "text",
+                                                        "label": "Predicted Outputs"
+                                                    },
+                                                    {
+                                                        "name": "select",
+                                                        "type": "select",
+                                                        "label": "Select Method",
+                                                        "required": true,
+                                                        "validate": {
+                                                            "enum": [
+                                                                "chat",
+                                                                "prompt"
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "temperature",
+                                                        "type": "number",
+                                                        "label": "Temperature",
+                                                        "validate": {
+                                                            "max": 2,
+                                                            "min": 0
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "top_p",
+                                                        "type": "number",
+                                                        "label": "Top P",
+                                                        "validate": {
+                                                            "max": 1,
+                                                            "min": 0
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "n_completions",
+                                                        "type": "number",
+                                                        "label": "Number"
+                                                    },
+                                                    {
+                                                        "name": "frequency_penalty",
+                                                        "type": "number",
+                                                        "label": "Frequency Penalty",
+                                                        "validate": {
+                                                            "max": 2,
+                                                            "min": -2
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "presence_penalty",
+                                                        "type": "number",
+                                                        "label": "Presence Penalty",
+                                                        "validate": {
+                                                            "max": 2,
+                                                            "min": -2
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "logit_bias",
+                                                        "spec": {
+                                                            "name": "value",
+                                                            "spec": [
+                                                                {
+                                                                    "name": "token",
+                                                                    "type": "text",
+                                                                    "label": "Token ID",
+                                                                    "required": true
+                                                                },
+                                                                {
+                                                                    "name": "probability",
+                                                                    "type": "number",
+                                                                    "label": "Probability",
+                                                                    "required": true,
+                                                                    "validate": {
+                                                                        "max": 100,
+                                                                        "min": -100
+                                                                    }
+                                                                }
+                                                            ],
+                                                            "type": "collection",
+                                                            "label": "Token Probability"
+                                                        },
+                                                        "type": "array",
+                                                        "label": "Token Probability"
+                                                    },
+                                                    {
+                                                        "name": "seed",
+                                                        "type": "integer",
+                                                        "label": "Seed"
+                                                    },
+                                                    {
+                                                        "name": "stop",
+                                                        "spec": {
+                                                            "name": "value",
+                                                            "type": "text",
+                                                            "label": "Stop Sequence"
+                                                        },
+                                                        "type": "array",
+                                                        "label": "Stop Sequences",
+                                                        "validate": {
+                                                            "maxItems": 4
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "additionalParameters",
+                                                        "spec": {
+                                                            "name": "value",
+                                                            "spec": [
+                                                                {
+                                                                    "name": "key",
+                                                                    "type": "text",
+                                                                    "label": "Parameter Name",
+                                                                    "required": true
+                                                                },
+                                                                {
+                                                                    "name": "type",
+                                                                    "type": "select",
+                                                                    "label": "Input Type",
+                                                                    "options": [
+                                                                        {
+                                                                            "label": "Text",
+                                                                            "value": "text",
+                                                                            "nested": [
+                                                                                {
+                                                                                    "name": "value",
+                                                                                    "type": "text",
+                                                                                    "label": "Parameter Value"
+                                                                                }
+                                                                            ],
+                                                                            "default": true
+                                                                        },
+                                                                        {
+                                                                            "label": "Number",
+                                                                            "value": "number",
+                                                                            "nested": [
+                                                                                {
+                                                                                    "name": "value",
+                                                                                    "type": "number",
+                                                                                    "label": "Parameter Value"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "label": "Boolean",
+                                                                            "value": "boolean",
+                                                                            "nested": [
+                                                                                {
+                                                                                    "name": "value",
+                                                                                    "type": "boolean",
+                                                                                    "label": "Parameter Value"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "label": "Date",
+                                                                            "value": "date",
+                                                                            "nested": [
+                                                                                {
+                                                                                    "name": "value",
+                                                                                    "type": "date",
+                                                                                    "label": "Parameter Value"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "label": "Any",
+                                                                            "value": "any",
+                                                                            "nested": [
+                                                                                {
+                                                                                    "name": "value",
+                                                                                    "type": "any",
+                                                                                    "label": "Parameter Value"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ],
+                                                            "type": "collection",
+                                                            "label": "Input Parameter"
+                                                        },
+                                                        "type": "array",
+                                                        "label": "Other Input Parameters"
+                                                    },
+                                                    {
+                                                        "name": "model",
+                                                        "type": "select",
+                                                        "label": "Model",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "name": "max_tokens",
+                                                        "type": "uinteger",
+                                                        "label": "Max Completion Tokens"
+                                                    },
+                                                    {
+                                                        "name": "messages",
+                                                        "spec": {
+                                                            "name": "value",
+                                                            "spec": [
+                                                                {
+                                                                    "name": "role",
+                                                                    "type": "select",
+                                                                    "label": "Role",
+                                                                    "options": {
+                                                                        "store": [
+                                                                            {
+                                                                                "label": "User",
+                                                                                "value": "user",
+                                                                                "nested": [
+                                                                                    {
+                                                                                        "help": "Text content of the message on behalf of the selected __Role__.",
+                                                                                        "name": "content",
+                                                                                        "type": "text",
+                                                                                        "label": "Text Content"
+                                                                                    },
+                                                                                    {
+                                                                                        "name": "imageInputType",
+                                                                                        "type": "select",
+                                                                                        "label": "Image Input Type",
+                                                                                        "options": [
+                                                                                            {
+                                                                                                "label": "URL",
+                                                                                                "value": "url",
+                                                                                                "nested": [
+                                                                                                    {
+                                                                                                        "help": "Make sure to use a publicly accessible URL.\nYou can test if your image is publicly accessible by opening the link in an incognito tab.",
+                                                                                                        "name": "imageUrl",
+                                                                                                        "type": "url",
+                                                                                                        "label": "Image URL"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "label": "Image File",
+                                                                                                "value": "file",
+                                                                                                "nested": [
+                                                                                                    {
+                                                                                                        "name": "imageFile",
+                                                                                                        "spec": [
+                                                                                                            {
+                                                                                                                "help": "Accepted extensions: `.jpg`, `.jpeg`, `.png`, `.webp` and `.gif`.",
+                                                                                                                "name": "imageFilename",
+                                                                                                                "type": "filename",
+                                                                                                                "label": "Image Filename",
+                                                                                                                "semantic": "file:name",
+                                                                                                                "extension": [
+                                                                                                                    "jpg",
+                                                                                                                    "jpeg",
+                                                                                                                    "png",
+                                                                                                                    "webp",
+                                                                                                                    "gif"
+                                                                                                                ]
+                                                                                                            },
+                                                                                                            {
+                                                                                                                "name": "imageData",
+                                                                                                                "type": "buffer",
+                                                                                                                "label": "Image Data",
+                                                                                                                "semantic": "file:data"
+                                                                                                            }
+                                                                                                        ],
+                                                                                                        "type": "collection",
+                                                                                                        "label": "Image"
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        ],
+                                                                                        "mappable": false
+                                                                                    },
+                                                                                    {
+                                                                                        "help": "Recommended value: `Auto`",
+                                                                                        "name": "imageDetail",
+                                                                                        "type": "select",
+                                                                                        "label": "Image Detail",
+                                                                                        "options": [
+                                                                                            {
+                                                                                                "label": "Auto",
+                                                                                                "value": "auto",
+                                                                                                "default": true
+                                                                                            },
+                                                                                            {
+                                                                                                "label": "High",
+                                                                                                "value": "high"
+                                                                                            },
+                                                                                            {
+                                                                                                "label": "Low",
+                                                                                                "value": "low"
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "label": "Assistant",
+                                                                                "value": "assistant",
+                                                                                "nested": [
+                                                                                    {
+                                                                                        "help": "Text content of the message on behalf of the selected __Role__.",
+                                                                                        "name": "content",
+                                                                                        "type": "text",
+                                                                                        "label": "Text Content"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "label": "Developer / System",
+                                                                                "value": "system",
+                                                                                "nested": [
+                                                                                    {
+                                                                                        "help": "Text content of the message on behalf of the selected __Role__.",
+                                                                                        "name": "content",
+                                                                                        "type": "text",
+                                                                                        "label": "Text Content"
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "required": true
+                                                                }
+                                                            ],
+                                                            "type": "collection",
+                                                            "label": "Message"
+                                                        },
+                                                        "type": "array",
+                                                        "label": "Messages",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "name": "response_format",
+                                                        "type": "select",
+                                                        "label": "Response Format",
+                                                        "validate": {
+                                                            "enum": [
+                                                                "text",
+                                                                "json_object"
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "prediction",
+                                                        "type": "text",
+                                                        "label": "Predicted Outputs"
+                                                    }
+                                                ],
+                                                "interface": [
+                                                    {
+                                                        "name": "result",
+                                                        "type": "any",
+                                                        "label": "Result"
+                                                    },
+                                                    {
+                                                        "name": "id",
+                                                        "type": "text",
+                                                        "label": "ID"
+                                                    },
+                                                    {
+                                                        "name": "object",
+                                                        "type": "text",
+                                                        "label": "Object"
+                                                    },
+                                                    {
+                                                        "name": "created",
+                                                        "type": "date",
+                                                        "label": "Created"
+                                                    },
+                                                    {
+                                                        "name": "model",
+                                                        "type": "text",
+                                                        "label": "Model"
+                                                    },
+                                                    {
+                                                        "name": "choices",
+                                                        "spec": {
+                                                            "spec": [
+                                                                {
+                                                                    "name": "text",
+                                                                    "type": "text",
+                                                                    "label": "Text"
+                                                                },
+                                                                {
+                                                                    "name": "index",
+                                                                    "type": "number",
+                                                                    "label": "Index"
+                                                                },
+                                                                {
+                                                                    "name": "logprobs",
+                                                                    "type": "text",
+                                                                    "label": "Log Probs"
+                                                                },
+                                                                {
+                                                                    "name": "finish_reason",
+                                                                    "type": "text",
+                                                                    "label": "Finish Reason"
+                                                                },
+                                                                {
+                                                                    "name": "message",
+                                                                    "spec": [
+                                                                        {
+                                                                            "name": "role",
+                                                                            "type": "text",
+                                                                            "label": "Role"
+                                                                        },
+                                                                        {
+                                                                            "name": "content",
+                                                                            "type": "text",
+                                                                            "label": "Content"
+                                                                        },
+                                                                        {
+                                                                            "name": "refusal",
+                                                                            "type": "text",
+                                                                            "label": "Refusal"
+                                                                        }
+                                                                    ],
+                                                                    "type": "collection",
+                                                                    "label": "Message"
+                                                                }
+                                                            ],
+                                                            "type": "collection"
+                                                        },
+                                                        "type": "array",
+                                                        "label": "Choices"
+                                                    },
+                                                    {
+                                                        "name": "usage",
+                                                        "spec": [
+                                                            {
+                                                                "name": "prompt_tokens",
+                                                                "type": "number",
+                                                                "label": "Prompt Tokens"
+                                                            },
+                                                            {
+                                                                "name": "completion_tokens",
+                                                                "type": "text",
+                                                                "label": "Completion Tokens"
+                                                            },
+                                                            {
+                                                                "name": "total_tokens",
+                                                                "type": "number",
+                                                                "label": "Total Tokens"
+                                                            },
+                                                            {
+                                                                "name": "prompt_tokens_details",
+                                                                "spec": [
+                                                                    {
+                                                                        "name": "cached_tokens",
+                                                                        "type": "uinteger",
+                                                                        "label": "Cached Tokens"
+                                                                    },
+                                                                    {
+                                                                        "name": "text_tokens",
+                                                                        "type": "uinteger",
+                                                                        "label": "Text Tokens"
+                                                                    },
+                                                                    {
+                                                                        "name": "image_tokens",
+                                                                        "type": "uinteger",
+                                                                        "label": "Image Tokens"
+                                                                    },
+                                                                    {
+                                                                        "name": "audio_tokens",
+                                                                        "type": "uinteger",
+                                                                        "label": "Audio Tokens"
+                                                                    }
+                                                                ],
+                                                                "type": "collection",
+                                                                "label": "Prompt Tokens Details"
+                                                            },
+                                                            {
+                                                                "name": "completion_tokens_details",
+                                                                "spec": [
+                                                                    {
+                                                                        "name": "reasoning_tokens",
+                                                                        "type": "uinteger",
+                                                                        "label": "Reasoning Tokens"
+                                                                    },
+                                                                    {
+                                                                        "name": "text_tokens",
+                                                                        "type": "uinteger",
+                                                                        "label": "Text Tokens"
+                                                                    },
+                                                                    {
+                                                                        "name": "audio_tokens",
+                                                                        "type": "uinteger",
+                                                                        "label": "Audio Tokens"
+                                                                    },
+                                                                    {
+                                                                        "name": "accepted_prediction_tokens",
+                                                                        "type": "uinteger",
+                                                                        "label": "Accepted Prediction Tokens"
+                                                                    },
+                                                                    {
+                                                                        "name": "rejected_prediction_tokens",
+                                                                        "type": "uinteger",
+                                                                        "label": "Rejected Prediction Tokens"
+                                                                    }
+                                                                ],
+                                                                "type": "collection",
+                                                                "label": "Completion Tokens Details"
+                                                            }
+                                                        ],
+                                                        "type": "collection",
+                                                        "label": "Usage"
+                                                    },
+                                                    {
+                                                        "name": "service_tier",
+                                                        "type": "text",
+                                                        "label": "Service Tier"
+                                                    },
+                                                    {
+                                                        "name": "system_fingerprint",
+                                                        "type": "text",
+                                                        "label": "System Fingerprint"
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "id": 27,
+                                            "module": "gateway:WebhookRespond",
+                                            "version": 1,
+                                            "parameters": {},
+                                            "mapper": {
+                                                "body": "{\n    \"results\": [\n        {\n            \"toolCallId\": \"{{1.message.toolCalls[].id}}\",\n            \"result\": \"{{26.choices[].message.content}}\"\n        }\n    ]\n}",
+                                                "status": "200",
+                                                "headers": []
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 3000,
+                                                    "y": 300
+                                                },
+                                                "restore": {
+                                                    "expect": {
+                                                        "headers": {
+                                                            "mode": "chose"
+                                                        }
+                                                    }
+                                                },
+                                                "expect": [
+                                                    {
+                                                        "name": "status",
+                                                        "type": "uinteger",
+                                                        "label": "Status",
+                                                        "required": true,
+                                                        "validate": {
+                                                            "min": 100
+                                                        }
+                                                    },
+                                                    {
+                                                        "name": "body",
+                                                        "type": "any",
+                                                        "label": "Body"
+                                                    },
+                                                    {
+                                                        "name": "headers",
+                                                        "spec": [
+                                                            {
+                                                                "name": "key",
+                                                                "type": "text",
+                                                                "label": "Key",
+                                                                "required": true,
+                                                                "validate": {
+                                                                    "max": 256
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": "value",
+                                                                "type": "text",
+                                                                "label": "Value",
+                                                                "required": true,
+                                                                "validate": {
+                                                                    "max": 4096
+                                                                }
+                                                            }
+                                                        ],
+                                                        "type": "array",
+                                                        "label": "Custom headers",
+                                                        "validate": {
+                                                            "maxItems": 16
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "metadata": {
+        "instant": true,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "eu2.make.com",
+        "notes": []
+    }
+}
